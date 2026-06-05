@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { User } from '@/types/user';
 import { me, logout as logoutService } from '@/services/auth';
 
@@ -12,32 +13,40 @@ type AuthStore = {
   checkAuth: () => Promise<void>;
 };
 
-export const useAuthStore = create<AuthStore>((set) => ({
-  user: null,
-  isAuth: false,
-  isLoading: true,
+export const useAuthStore = create<AuthStore>()(
+  persist(
+    (set) => ({
+      user: null,
+      isAuth: false,
+      isLoading: true,
 
-  setUser: (user) =>
-    set({
-      user,
-      isAuth: true,
-      isLoading: false,
+      setUser: (user) =>
+        set({
+          user,
+          isAuth: true,
+          isLoading: false,
+        }),
+
+      logout: async () => {
+        try {
+          await logoutService();
+        } finally {
+          set({ user: null, isAuth: false });
+        }
+      },
+
+      checkAuth: async () => {
+        try {
+          const data = await me();
+          set({ user: data.user, isAuth: true, isLoading: false });
+        } catch {
+          set({ user: null, isAuth: false, isLoading: false });
+        }
+      },
     }),
-
-  logout: async () => {
-    try {
-      await logoutService();
-    } finally {
-      set({ user: null, isAuth: false });
+    {
+      name: 'auth-store',
+      partialize: (state) => ({ user: state.user, isAuth: state.isAuth }),
     }
-  },
-
-  checkAuth: async () => {
-    try {
-      const data = await me();
-      set({ user: data, isAuth: true, isLoading: false });
-    } catch {
-      set({ user: null, isAuth: false, isLoading: false });
-    }
-  },
-}));
+  )
+);

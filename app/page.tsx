@@ -1,7 +1,7 @@
-import css from './page.module.css';
+import SectionList from '@/components/Section/SectionList/SectionList';
 
 const Page = () => {
-  return <div className={css['page']}>Page</div>;
+  return <SectionList />;
 };
 
 export default Page;

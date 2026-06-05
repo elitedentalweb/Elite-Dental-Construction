@@ -1,3 +1,16 @@
-body {
+* {
+  box-sizing: border-box;
+  padding: 0;
   margin: 0;
+}
+
+body {
+  background: #0d1017;
+  color: #fff;
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
 }
