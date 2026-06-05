@@ -15,13 +15,17 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
     checkAuth();
   }, []);
 
+  useEffect(() => {
+    if (!isLoading && !isAuth && !publicRoutes.includes(pathname)) {
+      router.push('/auth/login');
+    }
+  }, [isLoading, isAuth, pathname]);
+
   if (isLoading) return null;
 
   if (publicRoutes.includes(pathname)) return <>{children}</>;
 
-  if (!isAuth) {
-    return null;
-  }
+  if (!isAuth) return null;
 
   if (!user?.isApproved) return <PendingPage />;
 
