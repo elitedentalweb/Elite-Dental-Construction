@@ -4,6 +4,7 @@ import { usePhotoStore } from '@/store/photoStore';
 import { useAuthStore } from '@/store/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import css from './PhotoPage.module.css';
 
 type Props = {
@@ -16,7 +17,7 @@ const PhotoPage = ({ photoId, sectionId }: Props) => {
   const { currentPhoto, fetchPhotoById, deletePhoto } = usePhotoStore();
   const { user } = useAuthStore();
   const [showConfirm, setShowConfirm] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
 
   const isAdmin = user?.role === 'admin';
 
@@ -29,6 +30,22 @@ const PhotoPage = ({ photoId, sectionId }: Props) => {
   const handleDelete = async () => {
     await deletePhoto(photoId);
     router.push(`/sections/${sectionId}`);
+  };
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (previewIndex === null) return;
+    setPreviewIndex(
+      previewIndex === 0 ? currentPhoto.urls.length - 1 : previewIndex - 1
+    );
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (previewIndex === null) return;
+    setPreviewIndex(
+      previewIndex === currentPhoto.urls.length - 1 ? 0 : previewIndex + 1
+    );
   };
 
   return (
@@ -72,15 +89,38 @@ const PhotoPage = ({ photoId, sectionId }: Props) => {
               src={url}
               alt={`photo-${i}`}
               className={css['photo']}
-              onClick={() => setPreview(url)}
+              onClick={() => setPreviewIndex(i)}
             />
           ))}
         </div>
       )}
 
-      {preview && (
-        <div className={css['overlay']} onClick={() => setPreview(null)}>
-          <img src={preview} alt="preview" className={css['previewImg']} />
+      {previewIndex !== null && (
+        <div className={css['overlay']} onClick={() => setPreviewIndex(null)}>
+          <button className={css['navBtn']} onClick={handlePrev}>
+            <ChevronLeft size={28} />
+          </button>
+          <img
+            src={currentPhoto.urls[previewIndex]}
+            alt="preview"
+            className={css['previewImg']}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button className={css['navBtn']} onClick={handleNext}>
+            <ChevronRight size={28} />
+          </button>
+          <button
+            className={css['closeBtn']}
+            onClick={(e) => {
+              e.stopPropagation();
+              setPreviewIndex(null);
+            }}
+          >
+            <X size={20} />
+          </button>
+          <span className={css['counter']}>
+            {previewIndex + 1} / {currentPhoto.urls.length}
+          </span>
         </div>
       )}
 
