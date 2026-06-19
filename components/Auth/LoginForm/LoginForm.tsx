@@ -54,6 +54,9 @@ const LoginForm = () => {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
+        <Link href="/auth/forgot-password" className={css['forgotLink']}>
+          Forgot password?
+        </Link>
         {error && <p className={css['error']}>{error}</p>}
         <button type="submit" disabled={loading}>
           {loading ? 'Loading...' : 'Log in'}

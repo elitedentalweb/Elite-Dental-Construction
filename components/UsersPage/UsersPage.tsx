@@ -1,74 +1,92 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useUserStore } from '@/store/userStore';
+import { sendInvite } from '@/services/invites';
 import css from './UsersPage.module.css';
 
 const UsersPage = () => {
   const { users, fetchUsers, approveUser, deleteUser, setRole } =
     useUserStore();
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteError, setInviteError] = useState('');
+  const [inviteSuccess, setInviteSuccess] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    if (!email) {
-      setError('Please enter an email');
+    setInviteError('');
+    setInviteSuccess('');
+    if (!inviteEmail) {
+      setInviteError('Please enter an email');
       return;
     }
-    setLoading(true);
+    setInviteLoading(true);
     try {
-      await approveUser(email);
-      setEmail('');
+      await sendInvite(inviteEmail);
+      setInviteSuccess('Invite sent successfully!');
+      setInviteEmail('');
     } catch {
-      setError('User not found or already approved');
+      setInviteError('Failed to send invite');
     } finally {
-      setLoading(false);
+      setInviteLoading(false);
     }
   };
-
-  const approvedUsers = users.filter((u) => u.isApproved);
 
   return (
     <div className={css['page']}>
       <h1 className={css['title']}>Users</h1>
 
       <div className={css['addBlock']}>
-        <p className={css['blockTitle']}>Add User</p>
-        <form className={css['addForm']} onSubmit={handleAdd}>
+        <p className={css['blockTitle']}>Invite User</p>
+        <form className={css['addForm']} onSubmit={handleInvite}>
           <input
             className={css['input']}
             type="email"
             placeholder="Enter user email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
           />
-          <button className={css['addButton']} type="submit" disabled={loading}>
-            {loading ? 'Adding...' : 'Add'}
+          <button
+            className={css['addButton']}
+            type="submit"
+            disabled={inviteLoading}
+          >
+            {inviteLoading ? 'Sending...' : 'Send Invite'}
           </button>
         </form>
-        {error && <p className={css['error']}>{error}</p>}
+        {inviteError && <p className={css['error']}>{inviteError}</p>}
+        {inviteSuccess && <p className={css['success']}>{inviteSuccess}</p>}
       </div>
 
       <div className={css['userList']}>
-        <p className={css['listTitle']}>
-          Active Users ({approvedUsers.length})
-        </p>
-        {approvedUsers.length === 0 && (
-          <p className={css['empty']}>No users yet</p>
-        )}
-        {approvedUsers.map((user) => (
+        <p className={css['listTitle']}>All Users ({users.length})</p>
+        {users.length === 0 && <p className={css['empty']}>No users yet</p>}
+        {users.map((user) => (
           <div key={user._id} className={css['userCard']}>
             <div className={css['userInfo']}>
               <p className={css['userEmail']}>{user.email}</p>
               <p className={css['userNickname']}>{user.nickname}</p>
+              <p
+                className={css['status']}
+                style={{ color: user.isApproved ? '#22c55e' : '#f59e0b' }}
+              >
+                {user.isApproved ? '● Approved' : '● Pending'}
+              </p>
             </div>
             <div className={css['userActions']}>
+              {!user.isApproved && (
+                <button
+                  className={css['approveButton']}
+                  onClick={() => approveUser(user.email)}
+                >
+                  Approve
+                </button>
+              )}
               <select
                 className={css['roleSelect']}
                 value={user.role}
